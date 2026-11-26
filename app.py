@@ -15,7 +15,7 @@ from phonetool.countries import COUNTRIES
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title(f"手机号整理工具 v{__version__}")
+        self.title(f"齐天大胜 v{__version__}")
         self.geometry("760x640")
         self.minsize(680, 560)
         self.q = queue.Queue()
