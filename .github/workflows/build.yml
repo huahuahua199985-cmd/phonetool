@@ -1,0 +1,46 @@
+name: build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q tests
+
+  package:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - name: PyInstaller
+        run: >
+          pyinstaller --noconfirm --clean --windowed --name PhoneTool
+          --collect-all phonenumbers --collect-all python_calamine
+          --hidden-import xlsxwriter app.py
+      - name: Zip (Windows)
+        shell: pwsh
+        run: Compress-Archive -Path dist/PhoneTool -DestinationPath PhoneTool-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PhoneTool-${{ matrix.name }}
+          path: PhoneTool-${{ matrix.name }}.zip
